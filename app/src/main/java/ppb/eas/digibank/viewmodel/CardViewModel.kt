@@ -1,41 +1,35 @@
 package ppb.eas.digibank.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import ppb.eas.digibank.data.AppDatabase
 import ppb.eas.digibank.data.Card
 import ppb.eas.digibank.data.CardRepository
 
-class CardViewModel(application: Application, private val userId: Int) : ViewModel() {
-    private val cardRepository: CardRepository
-
-    val userCards: Flow<List<Card>>
+class CardViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository: CardRepository
+    val cards: LiveData<List<Card>>
 
     init {
-        val cardDao = AppDatabase.getDatabase(application, viewModelScope).cardDao()
-        cardRepository = CardRepository(cardDao)
-        userCards = cardRepository.getCardsForUser(userId)
+        val cardDao = AppDatabase.getDatabase(application).cardDao()
+        repository = CardRepository(cardDao)
+        cards = repository.allCards
     }
 
-    fun addCard(card: Card) = viewModelScope.launch {
-        cardRepository.insert(card)
+    fun insert(card: Card) = viewModelScope.launch {
+        repository.insert(card)
     }
 
-    fun deleteCard(cardId: Int) = viewModelScope.launch {
-        cardRepository.deleteCardById(cardId)
+    fun update(card: Card) = viewModelScope.launch {
+        repository.update(card)
     }
-}
 
-class CardViewModelFactory(private val application: Application, private val userId: Int) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CardViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return CardViewModel(application, userId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+    fun delete(card: Card) = viewModelScope.launch {
+        repository.delete(card)
     }
+
+    fun getCardById(id: Int) = repository.getCardById(id)
 }

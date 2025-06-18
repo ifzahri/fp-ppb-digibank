@@ -1,26 +1,20 @@
 package ppb.eas.digibank.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
-@Entity(
-    tableName = "transactions",
-    foreignKeys = [ForeignKey(
-        entity = User::class,
-        parentColumns = ["id"],
-        childColumns = ["userId"],
-        onDelete = ForeignKey.CASCADE
-    )],
-    indices = [Index(value = ["userId"])]
-)
+@Entity(tableName = "transactions")
 data class Transaction(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val userId: Int,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo(name = "id_card")
+    val id_card: Int,
+    @ColumnInfo(name = "amount")
     val amount: Double,
-    val date: Date,
-    val type: String, // e.g., "Top Up", "Transfer Out", "Transfer In"
-    val description: String
+    @ColumnInfo(name = "type")
+    val type: String,
+    @ColumnInfo(name = "date")
+    val date: Date
 )

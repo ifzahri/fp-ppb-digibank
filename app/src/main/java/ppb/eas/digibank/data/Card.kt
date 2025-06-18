@@ -1,26 +1,27 @@
 package ppb.eas.digibank.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(
-    tableName = "cards",
-    foreignKeys = [ForeignKey(
-        entity = User::class,
-        parentColumns = ["id"],
-        childColumns = ["userId"],
-        onDelete = ForeignKey.CASCADE
-    )],
-    indices = [Index(value = ["userId"])]
-)
+@Entity(tableName = "cards")
 data class Card(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val userId: Int,
-    val cardHolderName: String,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo(name = "id_user")
+    val id_user: Int,
+    @ColumnInfo(name = "card_number")
     val cardNumber: String,
-    val expiryDate: String, // Stored as MM/YY
+    @ColumnInfo(name = "card_holder_name")
+    val cardHolderName: String,
+    @ColumnInfo(name = "expiry_date")
+    val expiryDate: String,
+    @ColumnInfo(name = "cvv")
     val cvv: String,
-    val provider: String // e.g., Visa, Mastercard
+    @ColumnInfo(name = "balance")
+    var balance: Double,
+    @ColumnInfo(name = "card_type")
+    val cardType: String,
+    @ColumnInfo(name = "pin")
+    val pin: String
 )

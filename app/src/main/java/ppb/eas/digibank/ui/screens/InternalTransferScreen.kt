@@ -22,7 +22,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -32,37 +31,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import ppb.eas.digibank.data.Card
-import ppb.eas.digibank.data.Payee
 import ppb.eas.digibank.viewmodel.CardViewModel
 import ppb.eas.digibank.viewmodel.CardViewModelFactory
-import ppb.eas.digibank.viewmodel.PayeeViewModel
-import ppb.eas.digibank.viewmodel.PayeeViewModelFactory
 import ppb.eas.digibank.viewmodel.TransactionViewModel
 import ppb.eas.digibank.viewmodel.TransactionViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransferScreen(
+fun InternalTransferScreen(
     navController: NavHostController,
     cardViewModel: CardViewModel = viewModel(factory = CardViewModelFactory(LocalContext.current.applicationContext as Application)),
-    transactionViewModel: TransactionViewModel = viewModel(factory = TransactionViewModelFactory(LocalContext.current.applicationContext as Application)),
-    payeeViewModel: PayeeViewModel = viewModel(factory = PayeeViewModelFactory(LocalContext.current.applicationContext as Application))
+    transactionViewModel: TransactionViewModel = viewModel(factory = TransactionViewModelFactory(LocalContext.current.applicationContext as Application))
 ) {
     val context = LocalContext.current
     val cards by cardViewModel.cards.observeAsState(initial = emptyList())
-    val payees by payeeViewModel.payees.collectAsState(initial = emptyList())
-
     var fromCard by remember { mutableStateOf<Card?>(null) }
-    var selectedPayee by remember { mutableStateOf<Payee?>(null) }
-    var toBank by remember { mutableStateOf("") }
-    var toAccNumber by remember { mutableStateOf("") }
+    var toCard by remember { mutableStateOf<Card?>(null) }
     var amount by remember { mutableStateOf("") }
+    var pin by remember { mutableStateOf("") }
     var fromCardExpanded by remember { mutableStateOf(false) }
-    var payeeExpanded by remember { mutableStateOf(false) }
+    var toCardExpanded by remember { mutableStateOf(false) }
 
     Scaffold { padding ->
         Column(
@@ -73,7 +66,7 @@ fun TransferScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Transfer to Other Bank", style = MaterialTheme.typography.headlineMedium)
+            Text("Internal Transfer", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(16.dp))
 
             // From Card Dropdown
@@ -88,7 +81,9 @@ fun TransferScreen(
                         readOnly = true,
                         label = { Text("From Card") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = fromCardExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
                     )
                     ExposedDropdownMenu(
                         expanded = fromCardExpanded,
@@ -108,71 +103,55 @@ fun TransferScreen(
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Payee selection
+            // To Card Dropdown
             Box(modifier = Modifier.fillMaxWidth()) {
                 ExposedDropdownMenuBox(
-                    expanded = payeeExpanded,
-                    onExpandedChange = { payeeExpanded = !payeeExpanded }
+                    expanded = toCardExpanded,
+                    onExpandedChange = { toCardExpanded = !toCardExpanded }
                 ) {
                     TextField(
-                        value = selectedPayee?.name ?: "Select Payee or Enter Manually",
+                        value = toCard?.let { ".... ${it.cardNumber.takeLast(4)}" } ?: "Select Destination Card",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("To Payee") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = payeeExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                        label = { Text("To Card") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = toCardExpanded) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
                     )
                     ExposedDropdownMenu(
-                        expanded = payeeExpanded,
-                        onDismissRequest = { payeeExpanded = false }
+                        expanded = toCardExpanded,
+                        onDismissRequest = { toCardExpanded = false }
                     ) {
-                        payees.forEach { payee ->
+                        cards.filter { it.id != fromCard?.id }.forEach { card ->
                             DropdownMenuItem(
-                                text = { Text("${payee.name} - ${payee.accountNumber}") },
+                                text = { Text(".... ${card.cardNumber.takeLast(4)}") },
                                 onClick = {
-                                    selectedPayee = payee
-                                    toBank = payee.bankName
-                                    toAccNumber = payee.accountNumber
-                                    payeeExpanded = false
+                                    toCard = card
+                                    toCardExpanded = false
                                 }
                             )
                         }
-                        DropdownMenuItem(
-                            text = { Text("Enter manually...") },
-                            onClick = {
-                                selectedPayee = null
-                                toBank = ""
-                                toAccNumber = ""
-                                payeeExpanded = false
-                            }
-                        )
                     }
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
-                value = toBank,
-                onValueChange = { toBank = it },
-                label = { Text("Bank Tujuan") },
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = selectedPayee != null
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = toAccNumber,
-                onValueChange = { toAccNumber = it },
-                label = { Text("Nomor Rekening Tujuan") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = selectedPayee != null
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
                 value = amount,
                 onValueChange = { amount = it },
-                label = { Text("Nominal") },
+                label = { Text("Amount") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = pin,
+                onValueChange = { if (it.length <= 6) pin = it },
+                label = { Text("Source Card PIN") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -180,28 +159,34 @@ fun TransferScreen(
             Button(
                 onClick = {
                     val from = fromCard
+                    val to = toCard
                     val transferAmount = amount.toDoubleOrNull()
 
-                    if (from == null || toBank.isBlank() || toAccNumber.isBlank() || transferAmount == null || transferAmount <= 0) {
+                    if (from == null || to == null || transferAmount == null || transferAmount <= 0 || pin.isBlank()) {
                         Toast.makeText(context, "Please fill all fields correctly.", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
+                    if(from.id == to.id) {
+                        Toast.makeText(context, "Cannot transfer to the same card.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
 
-                    transactionViewModel.transfer(
+                    transactionViewModel.transferBetweenCards(
                         fromCardId = from.id,
-                        toBank = toBank,
-                        toAccNumber = toAccNumber,
+                        toCardId = to.id,
                         amount = transferAmount,
+                        pin = pin,
                         onSuccess = {
                             Toast.makeText(context, "Transfer successful!", Toast.LENGTH_LONG).show()
                             navController.popBackStack()
                         },
-                        onError = {errorMsg ->
+                        onError = { errorMsg ->
                             Toast.makeText(context, "Transfer failed: $errorMsg", Toast.LENGTH_LONG).show()
                         }
                     )
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = fromCard != null && toCard != null && amount.isNotBlank() && pin.isNotBlank()
             ) {
                 Text("Transfer")
             }

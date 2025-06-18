@@ -30,11 +30,11 @@ import ppb.eas.digibank.viewmodel.UserViewModel
 @Composable
 fun PinScreen(
     userViewModel: UserViewModel,
-    onPinSet: () -> Unit
+    onPinEntered: () -> Unit
 ) {
-    val context = LocalContext.current
+    var username by remember { mutableStateOf("ifzahri") } // Default for easy testing
     var pin by remember { mutableStateOf("") }
-    var confirmPin by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Scaffold { padding ->
         Column(
@@ -45,43 +45,36 @@ fun PinScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Set Your Security PIN", style = MaterialTheme.typography.headlineSmall)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("This 6-digit PIN will be used for all transactions.", style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(24.dp))
+            Text("Login", style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
-                value = pin,
-                onValueChange = { if (it.length <= 6) pin = it.filter { c -> c.isDigit() } },
-                label = { Text("Enter 6-digit PIN") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                visualTransformation = PasswordVisualTransformation(),
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = confirmPin,
-                onValueChange = { if (it.length <= 6) confirmPin = it.filter { c -> c.isDigit() } },
-                label = { Text("Confirm PIN") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                value = pin,
+                onValueChange = { if (it.length <= 6) pin = it },
+                label = { Text("PIN") },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                isError = pin != confirmPin && confirmPin.isNotEmpty()
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
-                    if (pin == confirmPin) {
-                        userViewModel.setPin(pin)
-                        Toast.makeText(context, "PIN Set Successfully!", Toast.LENGTH_SHORT).show()
-                        onPinSet()
+                    if (username.isNotBlank() && pin.isNotBlank()) {
+                        userViewModel.login(username, pin)
+                        onPinEntered()
                     } else {
-                        Toast.makeText(context, "PINs do not match.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please enter username and PIN.", Toast.LENGTH_SHORT).show()
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = pin.length == 6 && confirmPin.length == 6
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Set PIN")
+                Text("Login")
             }
         }
     }

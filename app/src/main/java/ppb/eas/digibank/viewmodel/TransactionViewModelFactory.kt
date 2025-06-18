@@ -3,14 +3,16 @@ package ppb.eas.digibank.viewmodel
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import ppb.eas.digibank.data.AppDatabase
+import ppb.eas.digibank.data.CardRepository
 
-class TransactionViewModelFactory(private val application: Application, i: Int) : ViewModelProvider.Factory {
+class TransactionViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TransactionViewModel::class.java)) {
+            val cardDao = AppDatabase.getDatabase(application).cardDao()
+            val cardRepository = CardRepository(cardDao)
             @Suppress("UNCHECKED_CAST")
-            // This assumes a default user ID of 1 for fetching transactions.
-            // In a real app, this would be dynamic.
-            return TransactionViewModel(application, 1) as T
+            return TransactionViewModel(application, cardRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

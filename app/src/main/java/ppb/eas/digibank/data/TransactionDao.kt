@@ -1,22 +1,18 @@
 package ppb.eas.digibank.data
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert
     suspend fun insert(transaction: Transaction)
 
-    @Query("SELECT * FROM transactions WHERE userId = :userId ORDER BY date DESC")
-    fun getTransactionsForUser(userId: Int): Flow<List<Transaction>>
+    @Query("SELECT * from transactions ORDER BY date DESC")
+    fun getAllTransactions(): LiveData<List<Transaction>>
 
-    @Query("SELECT * FROM transactions ORDER BY date DESC")
-    fun getAllTransactions(): Flow<List<Transaction>>
-
-    @Query("DELETE FROM transactions")
-    suspend fun deleteAll()
+    @Query("SELECT * FROM transactions WHERE id_card = :cardId ORDER BY date DESC")
+    fun getTransactionsByCard(cardId: Int): LiveData<List<Transaction>>
 }
