@@ -5,8 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "users")
 data class User(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val username: String,
-    val balance: Double
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val name: String,
+    var balance: Double,
+    val accountNumber: String,
+    var pin: String? = null // Added PIN field for transaction security
 )

@@ -12,9 +12,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,35 +29,38 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import ppb.eas.digibank.data.Transaction
-import ppb.eas.digibank.viewmodel.TransactionViewModel
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.Locale
+import androidx.lifecycle.viewmodel.compose.viewModel
+import ppb.eas.digibank.data.Card
+import ppb.eas.digibank.viewmodel.CardViewModel
+import ppb.eas.digibank.viewmodel.CardViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionHistoryScreen(
-    transactionViewModel: TransactionViewModel,
-    onBack: () -> Unit
+fun ManageCardsScreen(
+    cardViewModelFactory: CardViewModelFactory,
+    onBack: () -> Unit,
+    onNavigateToAddCard: () -> Unit
 ) {
-    // Correctly collect the Flow of transactions as a Compose State
-    val transactions by transactionViewModel.userTransactions.collectAsState(initial = emptyList())
+    val cardViewModel: CardViewModel = viewModel(factory = cardViewModelFactory)
+    val cards by cardViewModel.userCards.collectAsState(initial = emptyList())
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Transaction History") },
+                title = { Text("My Cards") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        // Using the updated AutoMirrored icon to fix the deprecation warning
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onNavigateToAddCard) {
+                Icon(Icons.Default.Add, contentDescription = "Add Card")
+            }
         }
     ) { padding ->
         Box(
@@ -62,17 +68,16 @@ fun TransactionHistoryScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (transactions.isEmpty()) {
+            if (cards.isEmpty()) {
                 Text(
-                    "No transactions yet.",
-                    modifier = Modifier.align(Alignment.Center)
+                    "No cards found. Add one!",
+                    modifier = Modifier.align(Alignment.Center),
+                    style = MaterialTheme.typography.bodyLarge
                 )
             } else {
-                LazyColumn(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    items(transactions) { transaction ->
-                        TransactionItem(transaction = transaction)
+                LazyColumn(modifier = Modifier.padding(16.dp)) {
+                    items(cards) { card ->
+                        CreditCardItem(card = card, onDelete = { cardViewModel.deleteCard(card.id) })
                     }
                 }
             }
@@ -81,21 +86,12 @@ fun TransactionHistoryScreen(
 }
 
 @Composable
-fun TransactionItem(transaction: Transaction) {
-    val numberFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-    val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-
-    // Determine color based on transaction amount
-    val amountColor = when {
-        transaction.amount > 0 -> Color(0xFF008000) // A standard green for income
-        else -> MaterialTheme.colorScheme.error // Use theme's error color for expenses
-    }
-
+fun CreditCardItem(card: Card, onDelete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
             modifier = Modifier
@@ -104,16 +100,19 @@ fun TransactionItem(transaction: Transaction) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(transaction.type, fontWeight = FontWeight.Bold)
-                Text(transaction.description, style = MaterialTheme.typography.bodyMedium)
-                Text(dateFormat.format(transaction.date), style = MaterialTheme.typography.bodySmall)
+                Text(card.provider, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "**** **** **** ${card.cardNumber.takeLast(4)}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontFamily = FontFamily.Monospace
+                )
+                Text("Exp: ${card.expiryDate}", style = MaterialTheme.typography.bodySmall)
+                Text(card.cardHolderName, style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = numberFormat.format(transaction.amount),
-                color = amountColor,
-                fontWeight = FontWeight.Bold
-            )
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete Card", tint = MaterialTheme.colorScheme.error)
+            }
         }
     }
 }

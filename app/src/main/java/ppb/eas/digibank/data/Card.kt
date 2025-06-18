@@ -4,10 +4,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.util.Date
 
 @Entity(
-    tableName = "transactions",
+    tableName = "cards",
     foreignKeys = [ForeignKey(
         entity = User::class,
         parentColumns = ["id"],
@@ -16,11 +15,12 @@ import java.util.Date
     )],
     indices = [Index(value = ["userId"])]
 )
-data class Transaction(
+data class Card(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val userId: Int,
-    val amount: Double,
-    val date: Date,
-    val type: String, // e.g., "Top Up", "Transfer Out", "Transfer In"
-    val description: String
+    val cardHolderName: String,
+    val cardNumber: String,
+    val expiryDate: String, // Stored as MM/YY
+    val cvv: String,
+    val provider: String // e.g., Visa, Mastercard
 )
