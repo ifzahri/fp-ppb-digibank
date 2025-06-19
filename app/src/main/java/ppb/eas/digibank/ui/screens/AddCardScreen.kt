@@ -1,6 +1,7 @@
 package ppb.eas.digibank.ui.screens
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -49,6 +50,8 @@ fun AddCardScreen(
     var confirmPin by remember { mutableStateOf("") }
     var isPinError by remember { mutableStateOf(false) }
     var pinErrorMessage by remember { mutableStateOf("") }
+    var isGeneralError by remember { mutableStateOf(false) }
+    var generalErrorMessage by remember { mutableStateOf("") }
 
     Scaffold { padding ->
         Column(
@@ -62,6 +65,7 @@ fun AddCardScreen(
         ) {
             Text("Add a New Card", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(16.dp))
+
             OutlinedTextField(
                 value = cardHolderName,
                 onValueChange = { cardHolderName = it },
@@ -69,6 +73,7 @@ fun AddCardScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = expiryDate,
                 onValueChange = { expiryDate = it },
@@ -76,6 +81,7 @@ fun AddCardScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = cvv,
                 onValueChange = { cvv = it },
@@ -84,6 +90,7 @@ fun AddCardScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = cardType,
                 onValueChange = { cardType = it },
@@ -91,6 +98,7 @@ fun AddCardScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = balance,
                 onValueChange = { balance = it },
@@ -99,6 +107,7 @@ fun AddCardScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = pin,
                 onValueChange = { if (it.length <= 6) pin = it },
@@ -109,6 +118,7 @@ fun AddCardScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = confirmPin,
                 onValueChange = { if (it.length <= 6) confirmPin = it },
@@ -128,26 +138,83 @@ fun AddCardScreen(
                 )
             }
 
+            if (isGeneralError) {
+                Text(
+                    text = generalErrorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
+
             Button(
                 onClick = {
-                    val isPinValid = pin.length == 6
-                    val arePinsMatching = pin == confirmPin
+                    Log.d("AddCardScreen", "Add Card button clicked")
+                    Log.d("AddCardScreen", "UserId: $userId")
 
+                    // Reset errors
+                    isPinError = false
+                    isGeneralError = false
+
+                    // Validate user ID
                     if (userId == -1) {
+                        Log.e("AddCardScreen", "Invalid userId: $userId")
+                        isGeneralError = true
+                        generalErrorMessage = "User session expired. Please login again."
                         return@Button
                     }
+
+                    // Validate all fields
+                    if (cardHolderName.isBlank()) {
+                        isGeneralError = true
+                        generalErrorMessage = "Please enter card holder name."
+                        return@Button
+                    }
+
+                    if (expiryDate.isBlank()) {
+                        isGeneralError = true
+                        generalErrorMessage = "Please enter expiry date."
+                        return@Button
+                    }
+
+                    if (cvv.isBlank()) {
+                        isGeneralError = true
+                        generalErrorMessage = "Please enter CVV."
+                        return@Button
+                    }
+
+                    if (cardType.isBlank()) {
+                        isGeneralError = true
+                        generalErrorMessage = "Please enter card type."
+                        return@Button
+                    }
+
+                    if (balance.isBlank() || balance.toDoubleOrNull() == null) {
+                        isGeneralError = true
+                        generalErrorMessage = "Please enter valid initial balance."
+                        return@Button
+                    }
+
+                    // Validate PIN
+                    val isPinValid = pin.length == 6
+                    val arePinsMatching = pin == confirmPin
 
                     if (!isPinValid) {
                         isPinError = true
                         pinErrorMessage = "PIN must be 6 digits."
-                    } else if (!arePinsMatching) {
+                        return@Button
+                    }
+
+                    if (!arePinsMatching) {
                         isPinError = true
                         pinErrorMessage = "PINs do not match."
-                    } else {
-                        isPinError = false
-                        pinErrorMessage = ""
+                        return@Button
+                    }
 
+                    // All validations passed, create card
+                    try {
                         val cardNumber = (1..16).map { Random.nextInt(0, 10) }.joinToString("")
                         val newCard = Card(
                             id_user = userId,
@@ -156,11 +223,18 @@ fun AddCardScreen(
                             expiryDate = expiryDate,
                             cvv = cvv,
                             cardType = cardType,
-                            balance = balance.toDoubleOrNull() ?: 0.0,
+                            balance = balance.toDouble(),
                             pin = pin
                         )
+
+                        Log.d("AddCardScreen", "Creating new card: $newCard")
                         cardViewModel.insert(newCard)
+                        Log.d("AddCardScreen", "Card inserted successfully, navigating back")
                         navController.popBackStack()
+                    } catch (e: Exception) {
+                        Log.e("AddCardScreen", "Error creating card: ${e.message}", e)
+                        isGeneralError = true
+                        generalErrorMessage = "Error creating card. Please try again."
                     }
                 },
                 modifier = Modifier.fillMaxWidth()

@@ -49,20 +49,72 @@ class MainActivity : ComponentActivity() {
                             PinScreen(
                                 userViewModel = userViewModel,
                                 onPinEntered = {
-                                   navController.navigate("home"){
-                                       popUpTo("login") { inclusive = true }
-                                   }
+                                    navController.navigate("home"){
+                                        popUpTo("login") { inclusive = true }
+                                    }
                                 }
                             )
                         }
-                        composable("home") { HomeScreen(navController = navController, userId = currentUser?.id ?: -1) }
-                        composable("addCard") { AddCardScreen(navController = navController, userId = currentUser?.id ?: -1) }
+                        composable("home") {
+                            HomeScreen(
+                                navController = navController,
+                                userId = currentUser?.id ?: run {
+                                    // If currentUser is null, navigate back to login
+                                    navController.navigate("login") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
+                                    return@run -1
+                                }
+                            )
+                        }
+                        composable("addCard") {
+                            val userId = currentUser?.id ?: run {
+                                // If currentUser is null, navigate back to login
+                                navController.navigate("login") {
+                                    popUpTo("addCard") { inclusive = true }
+                                }
+                                return@run -1
+                            }
+                            if (userId != -1) {
+                                AddCardScreen(navController = navController, userId = userId)
+                            }
+                        }
                         composable("topUp") { TopUpScreen(navController = navController) }
                         composable("transfer") { TransferScreen(navController = navController) }
-                        composable("transactionHistory") { TransactionHistoryScreen(navController = navController, userId = currentUser?.id ?: -1) }
+                        composable("transactionHistory") {
+                            val userId = currentUser?.id ?: run {
+                                navController.navigate("login") {
+                                    popUpTo("transactionHistory") { inclusive = true }
+                                }
+                                return@run -1
+                            }
+                            if (userId != -1) {
+                                TransactionHistoryScreen(navController = navController, userId = userId)
+                            }
+                        }
                         composable("internalTransfer") { InternalTransferScreen(navController = navController) }
-                        composable("managePayees") { ManagePayeesScreen(navController = navController, userId = currentUser?.id ?: -1) }
-                        composable("manageCards") { ManageCardsScreen(navController = navController, userId = currentUser?.id ?: -1) }
+                        composable("managePayees") {
+                            val userId = currentUser?.id ?: run {
+                                navController.navigate("login") {
+                                    popUpTo("managePayees") { inclusive = true }
+                                }
+                                return@run -1
+                            }
+                            if (userId != -1) {
+                                ManagePayeesScreen(navController = navController, userId = userId)
+                            }
+                        }
+                        composable("manageCards") {
+                            val userId = currentUser?.id ?: run {
+                                navController.navigate("login") {
+                                    popUpTo("manageCards") { inclusive = true }
+                                }
+                                return@run -1
+                            }
+                            if (userId != -1) {
+                                ManageCardsScreen(navController = navController, userId = userId)
+                            }
+                        }
                     }
                 }
             }
