@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import ppb.eas.digibank.data.Card
 import ppb.eas.digibank.data.Payee
+import ppb.eas.digibank.ui.components.BackButton
 import ppb.eas.digibank.viewmodel.CardViewModel
 import ppb.eas.digibank.viewmodel.CardViewModelFactory
 import ppb.eas.digibank.viewmodel.PayeeViewModel
@@ -64,7 +66,16 @@ fun TransferScreen(
     var fromCardExpanded by remember { mutableStateOf(false) }
     var payeeExpanded by remember { mutableStateOf(false) }
 
-    Scaffold { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Transfer to Other Bank") },
+                navigationIcon = {
+                    BackButton(navController = navController)
+                }
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -73,9 +84,6 @@ fun TransferScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Transfer to Other Bank", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-
             // From Card Dropdown
             Box(modifier = Modifier.fillMaxWidth()) {
                 ExposedDropdownMenuBox(

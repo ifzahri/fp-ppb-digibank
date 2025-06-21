@@ -17,12 +17,14 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -36,9 +38,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import ppb.eas.digibank.data.Card
+import ppb.eas.digibank.ui.components.BackButton
 import ppb.eas.digibank.viewmodel.CardViewModel
 import ppb.eas.digibank.viewmodel.CardViewModelFactory
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageCardsScreen(
     navController: NavHostController,
@@ -48,16 +52,22 @@ fun ManageCardsScreen(
     val cards by cardViewModel.cards.observeAsState(initial = emptyList())
     var cardToDelete by remember { mutableStateOf<Card?>(null) }
 
-    Scaffold { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Manage Your Cards") },
+                navigationIcon = {
+                    BackButton(navController = navController)
+                }
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
         ) {
-            Text("Manage Your Cards", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-
             if (cards.isEmpty()) {
                 Text(
                     "You have no cards to manage.",

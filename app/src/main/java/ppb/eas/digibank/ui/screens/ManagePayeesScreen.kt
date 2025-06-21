@@ -18,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +27,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,9 +41,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import ppb.eas.digibank.data.Payee
+import ppb.eas.digibank.ui.components.BackButton
 import ppb.eas.digibank.viewmodel.PayeeViewModel
 import ppb.eas.digibank.viewmodel.PayeeViewModelFactory
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManagePayeesScreen(
     navController: NavHostController,
@@ -52,6 +56,14 @@ fun ManagePayeesScreen(
     var showAddPayeeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Manage Payees") },
+                navigationIcon = {
+                    BackButton(navController = navController)
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddPayeeDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Payee")
@@ -64,9 +76,6 @@ fun ManagePayeesScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            Text("Manage Payees", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-
             if (payees.isEmpty()) {
                 Text("No payees saved. Click the '+' button to add one.", modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {

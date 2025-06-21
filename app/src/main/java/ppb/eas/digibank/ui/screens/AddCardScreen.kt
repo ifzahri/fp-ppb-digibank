@@ -13,10 +13,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,10 +33,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import ppb.eas.digibank.data.Card
+import ppb.eas.digibank.ui.components.BackButton
 import ppb.eas.digibank.viewmodel.CardViewModel
 import ppb.eas.digibank.viewmodel.CardViewModelFactory
 import kotlin.random.Random
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCardScreen(
     navController: NavHostController,
@@ -53,7 +57,16 @@ fun AddCardScreen(
     var isGeneralError by remember { mutableStateOf(false) }
     var generalErrorMessage by remember { mutableStateOf("") }
 
-    Scaffold { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Add New Card") },
+                navigationIcon = {
+                    BackButton(navController = navController)
+                }
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -63,9 +76,6 @@ fun AddCardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Add a New Card", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-
             OutlinedTextField(
                 value = cardHolderName,
                 onValueChange = { cardHolderName = it },
