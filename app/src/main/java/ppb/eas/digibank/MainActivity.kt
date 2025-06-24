@@ -21,6 +21,7 @@ import ppb.eas.digibank.ui.screens.ManagePayeesScreen
 import ppb.eas.digibank.ui.screens.PinScreen
 import ppb.eas.digibank.ui.screens.TopUpScreen
 import ppb.eas.digibank.ui.screens.TransactionHistoryScreen
+import ppb.eas.digibank.ui.screens.TransactionScreen
 import ppb.eas.digibank.ui.screens.TransferScreen
 import ppb.eas.digibank.ui.theme.DigiBankTheme
 import ppb.eas.digibank.viewmodel.UserViewModel
@@ -114,6 +115,14 @@ class MainActivity : ComponentActivity() {
                             if (userId != -1) {
                                 ManageCardsScreen(navController = navController, userId = userId)
                             }
+                        }
+                        composable("transaction") {
+                            TransactionScreen(
+                                onInternalTransferClick = { navController.navigate("internalTransfer") },
+                                onTransferClick = { navController.navigate("transfer") },
+                                onTopUpClick = { navController.navigate("topUp") },
+                                onNavigateBack = { navController.popBackStack() }
+                            )
                         }
                     }
                 }

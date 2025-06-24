@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.ui.res.painterResource
+import ppb.eas.digibank.R
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -94,7 +96,7 @@ private fun ActionButtons(navController: NavHostController) {
             Spacer(modifier = Modifier.size(8.dp))
             Text("Transfer to Other Bank")
         }
-         Button(onClick = { navController.navigate("manageCards") }, modifier = Modifier.fillMaxWidth()) {
+        Button(onClick = { navController.navigate("manageCards") }, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Default.CreditCard, contentDescription = "Manage Cards", modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.size(8.dp))
             Text("Manage Cards")
@@ -113,6 +115,11 @@ private fun ActionButtons(navController: NavHostController) {
             Icon(Icons.Default.List, contentDescription = "History", modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.size(8.dp))
             Text("Transaction History")
+        }
+        Button(onClick = { navController.navigate("transaction") }, modifier = Modifier.fillMaxWidth()) {
+            Icon(painter = painterResource(id = R.drawable.ic_transaction), contentDescription = "Transactions", modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.size(8.dp))
+            Text("Transactions")
         }
     }
 }

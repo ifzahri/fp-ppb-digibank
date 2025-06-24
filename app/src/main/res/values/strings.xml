@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">digibank</string>
+    <string name="internal_transfer">Internal Transfer</string>
+    <string name="transfer">Transfer</string>
+    <string name="top_up">Top Up</string>
+    <string name="transaction_screen_title">Transactions</string>
 </resources>
