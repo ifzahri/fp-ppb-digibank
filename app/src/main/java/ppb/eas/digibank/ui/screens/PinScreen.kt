@@ -62,11 +62,12 @@ fun PinScreen(
     onPinEntered: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    var username by remember { mutableStateOf("ifzahri") } // Default for easy testing
+    var username by remember { mutableStateOf("") }
     var pin by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var loginAttempted by remember { mutableStateOf(false) }
     var isPinVisible by remember { mutableStateOf(false) }
+    var loggedInUsername by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     // Observe the current user state
@@ -82,6 +83,7 @@ fun PinScreen(
                 // Login successful
                 isLoading = false
                 loginAttempted = false
+                loggedInUsername = username
                 onPinEntered()
             } else {
                 // Login failed

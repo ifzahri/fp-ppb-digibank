@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import ppb.eas.digibank.ui.screens.AccountScreen
 import ppb.eas.digibank.ui.screens.AddCardScreen
 import ppb.eas.digibank.ui.screens.HomeScreen
 import ppb.eas.digibank.ui.screens.InternalTransferScreen
@@ -84,6 +85,29 @@ class MainActivity : ComponentActivity() {
                                     return@run -1
                                 }
                             )
+                        }
+                        composable("account") {
+                            val userId = currentUser?.id ?: run {
+                                // If currentUser is null, navigate back to login
+                                navController.navigate("login") {
+                                    popUpTo("account") { inclusive = true }
+                                }
+                                return@run -1
+                            }
+                            if (userId != -1) {
+                                AccountScreen(
+                                    navController = navController,
+                                    userId = userId,
+                                    username = currentUser?.username ?: "User",
+                                    onLogout = {
+                                        // Clear user session and navigate to login
+                                        userViewModel.logout()
+                                        navController.navigate("login") {
+                                            popUpTo("home") { inclusive = true }
+                                        }
+                                    }
+                                )
+                            }
                         }
                         composable("addCard") {
                             val userId = currentUser?.id ?: run {
