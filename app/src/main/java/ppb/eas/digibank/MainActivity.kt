@@ -19,6 +19,7 @@ import ppb.eas.digibank.ui.screens.InternalTransferScreen
 import ppb.eas.digibank.ui.screens.ManageCardsScreen
 import ppb.eas.digibank.ui.screens.ManagePayeesScreen
 import ppb.eas.digibank.ui.screens.PinScreen
+import ppb.eas.digibank.ui.screens.RegisterScreen
 import ppb.eas.digibank.ui.screens.TopUpScreen
 import ppb.eas.digibank.ui.screens.TransactionHistoryScreen
 import ppb.eas.digibank.ui.screens.TransactionScreen
@@ -53,6 +54,22 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("home"){
                                         popUpTo("login") { inclusive = true }
                                     }
+                                },
+                                onNavigateToRegister = {
+                                    navController.navigate("register")
+                                }
+                            )
+                        }
+                        composable("register") {
+                            RegisterScreen(
+                                userViewModel = userViewModel,
+                                onRegisterSuccess = {
+                                    navController.navigate("login") {
+                                        popUpTo("register") { inclusive = true }
+                                    }
+                                },
+                                onNavigateBack = {
+                                    navController.popBackStack()
                                 }
                             )
                         }

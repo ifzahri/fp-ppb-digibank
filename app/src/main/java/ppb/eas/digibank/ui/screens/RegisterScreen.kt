@@ -18,7 +18,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -34,9 +36,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -53,46 +52,28 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
+import ppb.eas.digibank.data.User
 import ppb.eas.digibank.viewmodel.UserViewModel
 
 @Composable
-fun PinScreen(
+fun RegisterScreen(
     userViewModel: UserViewModel,
-    onPinEntered: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onRegisterSuccess: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
-    var username by remember { mutableStateOf("ifzahri") } // Default for easy testing
-    var pin by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var loginAttempted by remember { mutableStateOf(false) }
-    var isPinVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // Observe the current user state
-    val currentUser by userViewModel.currentUser.observeAsState()
+    var fullName by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+    var pin by remember { mutableStateOf("") }
+    var confirmPin by remember { mutableStateOf("") }
 
-    // Handle login result
-    LaunchedEffect(currentUser, loginAttempted, isLoading) {
-        if (loginAttempted && isLoading) {
-            // Wait a bit for the login process to complete
-            delay(1000) // Increased delay to ensure DB operation completes
+    var isPinVisible by remember { mutableStateOf(false) }
+    var isConfirmPinVisible by remember { mutableStateOf(false) }
 
-            if (currentUser != null) {
-                // Login successful
-                isLoading = false
-                loginAttempted = false
-                onPinEntered()
-            } else {
-                // Login failed
-                isLoading = false
-                loginAttempted = false
-                Toast.makeText(context, "Invalid username or PIN", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
+    var isLoading by remember { mutableStateOf(false) }
 
-    Scaffold { padding ->
+    Scaffold { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -108,12 +89,12 @@ fun PinScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
+                    .padding(paddingValues)
                     .padding(24.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Welcome Section
+                // Header Section
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -125,7 +106,7 @@ fun PinScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Default.AccountCircle,
+                            Icons.Default.Person,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(48.dp)
@@ -135,7 +116,7 @@ fun PinScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Welcome Back",
+                        text = "Create Account",
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -143,7 +124,7 @@ fun PinScreen(
                     )
 
                     Text(
-                        text = "Please enter your credentials to continue",
+                        text = "Please fill in your details to register",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         ),
@@ -154,7 +135,7 @@ fun PinScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Login Card
+                // Registration Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -166,6 +147,29 @@ fun PinScreen(
                     Column(
                         modifier = Modifier.padding(24.dp)
                     ) {
+                        // Full Name Field
+                        OutlinedTextField(
+                            value = fullName,
+                            onValueChange = { fullName = it },
+                            label = { Text("Full Name") },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isLoading,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         // Username Field
                         OutlinedTextField(
                             value = username,
@@ -221,42 +225,70 @@ fun PinScreen(
                             )
                         )
 
-                        // PIN Dots Indicator
-                        if (pin.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                repeat(6) { index ->
-                                    Box(
-                                        modifier = Modifier
-                                            .size(8.dp)
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(
-                                                if (index < pin.length)
-                                                    MaterialTheme.colorScheme.primary
-                                                else
-                                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                            )
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Confirm PIN Field
+                        OutlinedTextField(
+                            value = confirmPin,
+                            onValueChange = { if (it.length <= 6) confirmPin = it },
+                            label = { Text("Confirm PIN") },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { isConfirmPinVisible = !isConfirmPinVisible }) {
+                                    Icon(
+                                        imageVector = if (isConfirmPinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (isConfirmPinVisible) "Hide PIN" else "Show PIN",
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
-                                    if (index < 5) Spacer(modifier = Modifier.width(8.dp))
                                 }
-                            }
-                        }
+                            },
+                            visualTransformation = if (isConfirmPinVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isLoading,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                            )
+                        )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Login Button
+                        // Register Button
                         Button(
                             onClick = {
-                                if (username.isNotBlank() && pin.isNotBlank()) {
-                                    isLoading = true
-                                    loginAttempted = true
-                                    userViewModel.login(username, pin)
-                                } else {
-                                    Toast.makeText(context, "Please enter username and PIN.", Toast.LENGTH_SHORT).show()
+                                when {
+                                    fullName.isBlank() || username.isBlank() || pin.isBlank() || confirmPin.isBlank() -> {
+                                        Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
+                                    }
+                                    pin.length < 6 -> {
+                                        Toast.makeText(context, "PIN must be 6 digits", Toast.LENGTH_SHORT).show()
+                                    }
+                                    pin != confirmPin -> {
+                                        Toast.makeText(context, "PINs do not match", Toast.LENGTH_SHORT).show()
+                                    }
+                                    else -> {
+                                        isLoading = true
+                                        userViewModel.isUsernameAvailable(username) { available ->
+                                            if (!available) {
+                                                Toast.makeText(context, "Username already taken", Toast.LENGTH_SHORT).show()
+                                                isLoading = false
+                                            } else {
+                                                val user = User(username = username, pin = pin, name = fullName)
+                                                userViewModel.register(user)
+                                                isLoading = false
+                                                Toast.makeText(context, "Registration successful", Toast.LENGTH_SHORT).show()
+                                                onRegisterSuccess()
+                                            }
+                                        }
+                                    }
                                 }
                             },
                             modifier = Modifier
@@ -281,7 +313,7 @@ fun PinScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        "Logging in...",
+                                        "Registering...",
                                         color = MaterialTheme.colorScheme.onPrimary,
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Medium
@@ -289,7 +321,7 @@ fun PinScreen(
                                 }
                             } else {
                                 Text(
-                                    "Login",
+                                    "Register",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onPrimary
@@ -301,23 +333,12 @@ fun PinScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Security Note
+                // Already have account link
                 Text(
-                    text = "Your data is protected with bank-level security",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    ),
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Register Link
-                Text(
-                    text = "Don't have an account? Register",
+                    text = "Already have an account? Login",
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .clickable { onNavigateToRegister() }
+                        .clickable { onNavigateBack() }
                         .padding(vertical = 8.dp),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium

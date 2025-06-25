@@ -47,6 +47,17 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Check if a given username is not already in the DB.
+     * Calls onResult(true) if available, false if already taken.
+     */
+    fun isUsernameAvailable(username: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val user = repository.getUserByUsername(username)
+            onResult(user == null)
+        }
+    }
+
     fun logout() {
         _currentUser.value = null
     }
